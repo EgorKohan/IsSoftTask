@@ -51,7 +51,7 @@ public class CsvReader {
     }
 
     public static List<Message> getMessages() {
-        return messages.stream()
+        return messages.parallelStream()
                 .sorted(Comparator.comparing(Message::getDate))
                 .collect(Collectors.toList());
     }

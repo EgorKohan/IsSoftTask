@@ -19,7 +19,7 @@ public class Runner {
         Map<LocalDate, Map<Integer, Integer>> map = new HashMap<>();
 
         List<LocalDate> dates = messageList
-                .stream()
+                .parallelStream()//here was stream()
                 .map(Message::getDate)
                 .distinct()
                 .collect(Collectors.toList());
@@ -29,7 +29,7 @@ public class Runner {
 
             for (User user : userList) {
                 int count = (int) messageList
-                        .stream()
+                        .parallelStream() // here was stream()
                         .filter(message -> (message.getIdFrom() == user.getId() || message.getIdTo() == user.getId())
                                 && message.getDate().equals(date))
                         .count();
@@ -41,7 +41,7 @@ public class Runner {
         for (Map.Entry<LocalDate, Map<Integer, Integer>> mapLoop : map.entrySet()) {
             Map<Integer, Integer> integerMap = mapLoop.getValue();
             Map.Entry<Integer, Integer> integerEntry = integerMap.entrySet()
-                    .stream()
+                    .parallelStream()//here was stream()
                     .max(Comparator.comparingInt(Map.Entry::getValue))
                     .get();
             System.out.println(mapLoop.getKey() + " - " + userList.get(integerEntry.getKey()).getName());

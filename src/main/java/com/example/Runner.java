@@ -5,10 +5,7 @@ import com.example.model.Message;
 import com.example.model.User;
 
 import java.time.LocalDate;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class Runner {
@@ -18,24 +15,17 @@ public class Runner {
         List<Message> messageList = CsvReader.getMessages();
         Map<LocalDate, Map<Integer, Integer>> map = new HashMap<>();
 
-        List<LocalDate> dates = messageList
-                .parallelStream()//here was stream()
-                .map(Message::getDate)
-                .distinct()
-                .collect(Collectors.toList());
+        long start = System.currentTimeMillis();
 
-        for (LocalDate date : dates) {
-            Map<Integer, Integer> nestedMap = new HashMap<>();
+        final Set<LocalDate> dates = messageList.parallelStream().map(Message::getDate).collect(Collectors.toSet());
 
+        for (LocalDate localDate : dates) {
+            Map<Integer, Integer> userMap = new HashMap<>();
             for (User user : userList) {
-                int count = (int) messageList
-                        .parallelStream() // here was stream()
-                        .filter(message -> (message.getIdFrom() == user.getId() || message.getIdTo() == user.getId())
-                                && message.getDate().equals(date))
-                        .count();
-                nestedMap.put(user.getId(), count);
+                int userId = user.getId();
+                userMap.put(userId, getCountOfUsersByDate(messageList, localDate, userId));
             }
-            map.put(date, nestedMap);
+            map.put(localDate, userMap);
         }
 
         for (Map.Entry<LocalDate, Map<Integer, Integer>> mapLoop : map.entrySet()) {
@@ -46,6 +36,20 @@ public class Runner {
                     .get();
             System.out.println(mapLoop.getKey() + " - " + userList.get(integerEntry.getKey()).getName());
         }
+
+        long end = System.currentTimeMillis();
+        System.out.println(end - start);
+
     }
+
+    private static int getCountOfUsersByDate(List<Message> messageList, LocalDate localDate, int userId) {
+        return (int) messageList.parallelStream()
+                .filter(message -> (
+                                (message.getIdFrom() == userId || message.getIdTo() == userId) &&
+                                        localDate.equals(message.getDate())
+                        )
+                ).count();
+    }
+
 
 }
